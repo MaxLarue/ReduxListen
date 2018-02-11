@@ -10,7 +10,7 @@
  * 		}
  *
  * using atPath(myObj, "sliceTwo.subSliceOne") will return "bbbbb".
- * whereas using addAtPath(myObj, "sliceThree.subSliceOne.subSubSliceOne", "[]") will return the following
+ * whereas using setAtPath(myObj, "sliceThree.subSliceOne.subSubSliceOne", "[]") will return the following
  * NEW object:
  * 		let myObj = {
  * 			sliceOne: "xxxx",
@@ -36,18 +36,42 @@
  *         		    we could walk
  * @return {object}      wathever was found at that parh in the object
  */
-export function atPath(obj, path){
+export function atPath(obj, path=""){
 	if(path === ""){ return obj; }
 	let road = path.split(".");
 	actRoad = "";
 	let prev = obj;
 	let ret = undefined;
-	for(var part in road){
-		if(!prev.hasOwnProperty(part)){
+	for(var part = 0; part < road.length ; part ++){
+		if(!prev.hasOwnProperty(road[part])){
 			throw actRoad; 
 		}
-		prev = prev[part];
-		actRoad += ".part";
+		prev = prev[road[part]];
+		actRoad += "."+road[part];
 	}
 	return prev;
+}
+
+/**
+ * Walk obj according to path (creating if it doesn't exist) and insert value at the end
+ * @param {object} obj   the object in which to set at path
+ * @param {string} path  path with dot separator
+ * @param {object} value whatever tyou want to put at path
+ */
+export function setAtPath(obj, path, value){
+	if(path === "" ){ return value }
+	let road = path.split(".");
+	if(path.length === 1){
+		let newObj = {};
+		newObj[path[0]] = value;
+		return Object.assign({}, newObj);
+	}
+	let newRoad = road.slice(1).join(".");
+	let newObj = {};
+	if(obj.hasOwnProperty(road[0])){
+		newObj[road[0]] = setAtPath(obj[road[0]], newRoad, value);
+	}else{
+		newObj[road[0]] = setAtPath({}, newRoad, value);
+	}
+	return Object.assign({}, obj, newObj);
 }
